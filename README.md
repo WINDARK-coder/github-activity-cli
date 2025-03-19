@@ -15,3 +15,7 @@ A simple command-line tool to fetch and display a GitHub user's recent activity 
    ```sh
    git clone https://github.com/WINDARK-coder/github-activity-cli.git
    cd github-activity-cli
+
+## Project URL
+
+[GitHub Repository](https://github.com/WINDARK-coder/github-activity-cli)
