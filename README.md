@@ -1,5 +1,9 @@
 # GitHub Activity CLI 🚀
 
+**Project Page URL:** [Project Page](https://roadmap.sh/projects/github-user-activity)  
+
+**GitHub Repository URL:** [GitHub Repository](https://github.com/WINDARK-coder/github-activity-cli)
+
 A simple command-line tool to fetch and display a GitHub user's recent activity using the GitHub API.
 
 ## Features
