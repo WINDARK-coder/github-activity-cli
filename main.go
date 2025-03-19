@@ -1,73 +1,43 @@
 package main
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
-	"net/http"
 	"os"
+	"strings"
 )
 
-type Event struct {
-	Type string `json:"type"`
-	Repo struct {
-		Name string `json:"name"`
-	} `json:"repo"`
-}
-
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please enter a github username")
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		fmt.Println("⚠️ Warning: No GitHub token detected. API requests will be limited to 60 per hour.")
+		fmt.Println("Set your token with 'export GITHUB_TOKEN=your_token' (Mac/Linux) or '$env:GITHUB_TOKEN=\"your_token\"' (Windows)")
+	}
+	fmt.Println("Enter a github username")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	username := strings.TrimSpace(scanner.Text())
+
+	if username == "" {
+		fmt.Println("❌ Username cannot be empty!")
 		return
 	}
 
-	username := os.Args[1]
-
-	fmt.Printf("Fetching activity for username: %s\n", username)
+	fmt.Printf("\nFetching activity for username: %s\n", username)
 	events, err := getUserActivity(username)
 
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
-
-	displayActivity(events)
-}
-
-func getUserActivity(username string) ([]Event, error) {
-	url := fmt.Sprintf("https://api.github.com/users/%s/events", username)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
+	uniqueEvents := getUniqueEventTypes(events)
+	fmt.Println("\nAvailable event types:")
+	for _, eventType := range uniqueEvents {
+		fmt.Printf("- %s\n", eventType)
 	}
 
-	defer resp.Body.Close()
+	fmt.Println("Enter event type to filter (or press Enter to skip): ")
+	scanner.Scan()
+	filter := strings.TrimSpace(scanner.Text())
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch user activitzy: %s", resp.Status)
-	}
-
-	var events []Event
-
-	if err := json.NewDecoder(resp.Body).Decode(&events); err != nil {
-		return nil, err
-	}
-
-	return events, nil
-
-}
-
-func displayActivity(events []Event) {
-	for _, event := range events {
-		switch event.Type {
-		case "PushEvent":
-			fmt.Printf("🔄 Pushed to %s\n", event.Repo.Name)
-		case "IssuesEvent":
-			fmt.Printf("📝 Opened a new issue in %s\n", event.Repo.Name)
-		case "WatchEvent":
-			fmt.Printf("⭐ Starred %s\n", event.Repo.Name)
-		default:
-			fmt.Printf("🔍 Other event type: %s in %s\n", event.Type, event.Repo.Name)
-		}
-	}
+	displayActivity(events, filter)
 }
